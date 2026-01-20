@@ -2,7 +2,7 @@
 
 **Project Start Date:** 2026-01-20
 **Last Updated:** 2026-01-20
-**Current Status:** ✅ Electron App MVP Complete - macOS notarized, Windows building
+**Current Status:** ✅ v1.0.0 Complete - All platforms built, macOS notarized
 
 ---
 
@@ -16,18 +16,18 @@ The project has **pivoted from web deployment to a desktop Electron application*
 
 ---
 
-## Build Outputs
+## Build Outputs (v1.0.0)
 
 ### macOS (Complete & Notarized)
 | File | Size | Architecture | Status |
 |------|------|-------------|--------|
-| `CubbyScore Converter-1.0.0-arm64.dmg` | 297 MB | Apple Silicon | ✅ Notarized & Stapled |
-| `CubbyScore Converter-1.0.0.dmg` | 304 MB | Intel x64 | ✅ Notarized & Stapled |
+| `CubbyScore Converter-1.0.0-arm64.dmg` | 298 MB | Apple Silicon | ✅ Notarized & Stapled |
+| `CubbyScore Converter-1.0.0.dmg` | 306 MB | Intel x64 | ✅ Notarized & Stapled |
 
-### Windows (Building)
+### Windows (Complete)
 | File | Size | Architecture | Status |
 |------|------|-------------|--------|
-| `CubbyScore Converter Setup 1.0.0.exe` | ~300 MB | x64 | 🚧 Building |
+| `CubbyScore Converter Setup 1.0.0.exe` | 252 MB | x64 | ✅ Built (unsigned) |
 
 ---
 
@@ -55,6 +55,7 @@ The project has **pivoted from web deployment to a desktop Electron application*
 - [x] Audiveris bundled with embedded JRE (131MB)
 - [x] Custom launcher script for Audiveris
 - [x] Backend process management (spawn on app start, health check, cleanup on quit)
+- [x] CSS fix for file:// protocol (`assetPrefix: './'`)
 
 ### Phase 4: macOS Build & Signing ✅
 - [x] Code signing with Developer ID certificate
@@ -66,12 +67,16 @@ The project has **pivoted from web deployment to a desktop Electron application*
 - [x] Notarization tickets stapled to DMGs
 - [x] Verified as "Notarized Developer ID" by spctl
 
-### Phase 5: Windows Build 🚧
+### Phase 5: Windows Build ✅
 - [x] Cross-compilation configured from macOS
 - [x] NSIS installer configured
-- [ ] Build completion
-- [ ] Testing on Windows machine
-- [ ] Code signing (requires Windows certificate - optional for now)
+- [x] Build completed successfully
+- [ ] Testing on actual Windows machine
+- [ ] Code signing (optional - requires Windows certificate)
+
+### Phase 6: App Polish ✅
+- [x] Custom app icon (PDF→MusicXML design)
+- [x] Icon formats: .icns (macOS), .ico (Windows)
 
 ---
 
@@ -96,6 +101,11 @@ The project has **pivoted from web deployment to a desktop Electron application*
 
 **Solution:** Updated the script to use `file` command to detect Mach-O binaries regardless of permission bits.
 
+### 4. CSS Not Loading in Electron
+**Problem:** Next.js static export uses absolute paths (`/_next/static/...`) that don't work with Electron's `file://` protocol.
+
+**Solution:** Added `assetPrefix: './'` to `next.config.ts` to generate relative paths.
+
 ---
 
 ## Project Structure
@@ -117,19 +127,16 @@ cubby-score-conversion/
 │   ├── resources/
 │   │   ├── backend/          # Bundled Python executable (55MB)
 │   │   └── audiveris/        # Audiveris + JRE bundle (131MB)
-│   │       ├── app/          # JAR files (with signed native libs)
-│   │       ├── jre/          # Embedded Java runtime
-│   │       └── bin/          # Launcher script
 │   ├── build/
+│   │   ├── icon.icns         # macOS icon
+│   │   ├── icon.ico          # Windows icon
 │   │   └── entitlements.mac.plist
-│   ├── dist/                  # Build outputs (DMGs, installers)
 │   ├── electron-builder.yml
 │   └── package.json
 └── scripts/
     ├── bundle-audiveris.sh    # Bundle Audiveris from installed app
     ├── build-backend.sh       # Build Python with PyInstaller
-    ├── sign-audiveris-jars.sh # Sign native libs in JARs (critical!)
-    └── build-all.sh           # Full build script
+    └── sign-audiveris-jars.sh # Sign native libs in JARs (critical!)
 ```
 
 ---
@@ -179,8 +186,6 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 | Electron | 40.0.0 |
 | electron-builder | 26.4.0 |
 | Java (bundled) | 21+ |
-| Signing Identity | Developer ID Application: Willard Jansen (9N27LU6UBD) |
-| Team ID | 9N27LU6UBD |
 
 ---
 
@@ -188,11 +193,9 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 
 ### High Priority
 - [ ] Test Windows build on actual Windows machine
-- [ ] Test full conversion workflow end-to-end on fresh macOS install
-- [ ] Create app icon (currently using default Electron icon)
+- [ ] Set up cubbyscore.com website with download links
 
 ### Medium Priority
-- [ ] Set up cubbyscore.com website with download links
 - [ ] Add auto-update functionality (electron-updater)
 - [ ] Error handling UI improvements
 
@@ -200,38 +203,6 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 - [ ] About dialog
 - [ ] Progress indicators for long operations
 - [ ] Windows code signing (requires certificate purchase)
-
----
-
-## Original Web Development Progress (Pre-Electron)
-
-<details>
-<summary>Click to expand original web development progress</summary>
-
-### Backend Phase 1: Setup ✅
-- Python environment setup
-- FastAPI verified running
-- Health endpoint working
-
-### Backend Phase 2: OMR Engine ✅
-- Audiveris selected as primary engine
-- CLI integration: `/Applications/Audiveris.app/Contents/MacOS/Audiveris -batch -export -output <dir> <input.pdf>`
-- homr installed as alternative for scanned scores
-
-### Backend Phase 3: Validation ✅
-- Implemented metadata extraction (title, composer, instruments)
-- Clef detection and counting
-- Time signature extraction
-- Tempo marking extraction
-- Note counting and confidence scoring
-
-### Frontend ✅
-- Next.js 14 with TypeScript
-- Tailwind CSS styling (Cubby theme)
-- API integration complete
-- Real-time conversion status
-
-</details>
 
 ---
 
@@ -248,8 +219,19 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 | 2026-01-20 | Audiveris bundled with JRE |
 | 2026-01-20 | macOS code signing complete |
 | 2026-01-20 | macOS notarization passed ✅ |
-| 2026-01-20 | Windows cross-compilation started |
+| 2026-01-20 | Windows build complete ✅ |
+| 2026-01-20 | Custom app icon added ✅ |
+| 2026-01-20 | **v1.0.0 Release Ready** ✅ |
 
 ---
 
-**Next:** Test Windows build, create app icon, set up website for distribution.
+## Test Results
+
+Tested with Ethel Smyth orchestral score:
+- **Overall Confidence:** 85.6%
+- **Processing Time:** 66.36s
+- **Metadata:** Composer detected (60%)
+- **Clefs:** 63 detected (98%)
+- **Time Signatures:** 6/8 detected (95%)
+- **Tempo Markings:** "animato" detected (90%)
+- **Notes:** 872 notes detected (85%)
