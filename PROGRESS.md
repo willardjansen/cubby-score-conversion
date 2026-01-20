@@ -2,7 +2,7 @@
 
 **Project Start Date:** 2026-01-20
 **Last Updated:** 2026-01-20
-**Current Status:** ✅ v1.0.0 Released on GitHub | Website Live at cubbyscore.com
+**Current Status:** ✅ v1.0.0 Released on GitHub | Landing Page Live at convert.cubbyscore.com
 
 ---
 
@@ -77,11 +77,19 @@ The project has **pivoted from web deployment to a desktop Electron application*
 - [x] Icon formats: .icns (macOS), .ico (Windows)
 
 ### Phase 7: Website ✅
-- [x] Static HTML landing page for cubbyscore.com
-- [x] Cubby dark theme (pink/purple)
+- [x] Static HTML landing page
+- [x] Cubby dark theme (pink/purple, #12101a background)
 - [x] Download buttons linking to GitHub releases
 - [x] Feature highlights section
 - [x] System requirements section
+- [x] Privacy policy page
+
+### Phase 8: VPS Deployment ✅
+- [x] Landing page deployed to convert.cubbyscore.com
+- [x] Static files served via Caddy with auto-SSL
+- [x] DNS configured (A record for convert subdomain)
+- [x] Linked from cubbyscore.com analyzer app
+- [x] Server-side OMR removed (runs locally in Electron app for privacy/performance)
 - [x] 4-column footer (branding, resources, license, donate)
 - [x] PayPal donation integration
 - [x] Privacy policy page
