@@ -2,7 +2,7 @@
 
 **Project Start Date:** 2026-01-20
 **Last Updated:** 2026-01-20
-**Current Status:** ✅ v1.0.0 Complete - All platforms built, macOS notarized
+**Current Status:** ✅ v1.0.0 Released on GitHub
 
 ---
 
@@ -16,18 +16,16 @@ The project has **pivoted from web deployment to a desktop Electron application*
 
 ---
 
-## Build Outputs (v1.0.0)
+## GitHub Release
 
-### macOS (Complete & Notarized)
-| File | Size | Architecture | Status |
-|------|------|-------------|--------|
-| `CubbyScore Converter-1.0.0-arm64.dmg` | 298 MB | Apple Silicon | ✅ Notarized & Stapled |
-| `CubbyScore Converter-1.0.0.dmg` | 306 MB | Intel x64 | ✅ Notarized & Stapled |
+**v1.0.0**: https://github.com/willardjansen/cubby-score-conversion/releases/tag/v1.0.0
 
-### Windows (Complete)
-| File | Size | Architecture | Status |
-|------|------|-------------|--------|
-| `CubbyScore Converter Setup 1.0.0.exe` | 252 MB | x64 | ✅ Built (unsigned) |
+### Downloads
+| File | Size | Platform | Status |
+|------|------|----------|--------|
+| `CubbyScore.Converter-1.0.0-arm64.dmg` | 298 MB | macOS Apple Silicon | ✅ Notarized |
+| `CubbyScore.Converter-1.0.0.dmg` | 306 MB | macOS Intel | ✅ Notarized |
+| `CubbyScore.Converter.Setup.1.0.0.exe` | 252 MB | Windows x64 | ✅ Built |
 
 ---
 
@@ -221,7 +219,8 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 | 2026-01-20 | macOS notarization passed ✅ |
 | 2026-01-20 | Windows build complete ✅ |
 | 2026-01-20 | Custom app icon added ✅ |
-| 2026-01-20 | **v1.0.0 Release Ready** ✅ |
+| 2026-01-20 | v1.0.0 Release Ready ✅ |
+| 2026-01-20 | **v1.0.0 Published on GitHub** ✅ |
 
 ---
 
