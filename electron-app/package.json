@@ -1,0 +1,41 @@
+{
+  "name": "cubbyscore-converter",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron/main.js",
+  "author": "Cubby",
+  "description": "PDF to MusicXML converter with OMR technology",
+  "homepage": "https://cubbyscore.com",
+  "scripts": {
+    "dev": "concurrently \"npm run backend:dev\" \"next dev --port 3005\" \"wait-on http://localhost:3005 && electron .\"",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "backend:dev": "cd ../backend && source venv/bin/activate && uvicorn main:app --port 8002",
+    "electron:dev": "concurrently \"next dev --port 3005\" \"wait-on http://localhost:3005 && electron .\"",
+    "electron:build": "next build && electron-builder",
+    "electron:build:mac": "next build && electron-builder --mac --x64 --arm64",
+    "electron:build:win": "next build && electron-builder --win",
+    "notarize": "xcrun notarytool submit dist/*.dmg --keychain-profile notarytool-profile --wait"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "next": "16.1.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "wait-on": "^9.0.3"
+  }
+}

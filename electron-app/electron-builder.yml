@@ -1,0 +1,74 @@
+appId: com.cubbyscore.converter
+productName: CubbyScore Converter
+copyright: Copyright © 2026 Cubby
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - electron/**/*
+  - out/**/*
+  - resources/**/*
+
+extraResources:
+  # Python backend executable
+  - from: resources/backend
+    to: backend
+    filter:
+      - "**/*"
+  # Audiveris with embedded JRE
+  - from: resources/audiveris
+    to: audiveris
+    filter:
+      - "**/*"
+
+mac:
+  category: public.app-category.music
+  icon: build/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: true
+  # Skip signing JAR files and their extracted contents - dylibs inside are pre-signed
+  signIgnore:
+    - ".*\\.jar$"
+    - ".*\\.class$"
+    - ".*audiveris/app/.*"
+
+dmg:
+  title: "${productName}"
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+
+extraMetadata:
+  main: electron/main.js
