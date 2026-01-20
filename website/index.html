@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CubbyScore - PDF to MusicXML Converter</title>
+    <meta name="description" content="Convert PDF music scores to MusicXML format using optical music recognition. Free desktop app for macOS and Windows.">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cubbyscore.com/">
+    <meta property="og:title" content="CubbyScore - PDF to MusicXML Converter">
+    <meta property="og:description" content="Convert PDF music scores to MusicXML format using optical music recognition. Free desktop app for macOS and Windows.">
+    <meta property="og:image" content="https://cubbyscore.com/pdf-to-musicxml-social.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CubbyScore - PDF to MusicXML Converter">
+    <meta name="twitter:description" content="Convert PDF music scores to MusicXML format using optical music recognition.">
+    <meta name="twitter:image" content="https://cubbyscore.com/pdf-to-musicxml-social.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/app-icon.png">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #12101a;
+            --bg-surface: #1e1a28;
+            --text-primary: #f0e8f5;
+            --text-secondary: #a89eb5;
+            --accent: #e8a0c0;
+            --accent-hover: #f0b8d0;
+            --border: #3d3550;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .logo {
+            max-width: 400px;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .download-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .download-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .download-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: var(--accent);
+            color: var(--bg-dark);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .download-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .download-btn .platform {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .download-btn .size {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .download-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .feature {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .feature p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .screenshot {
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .requirements {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .requirements h3 {
+            margin-bottom: 1rem;
+        }
+
+        .requirements ul {
+            list-style: none;
+            color: var(--text-secondary);
+        }
+
+        .requirements li {
+            padding: 0.25rem 0;
+        }
+
+        .requirements li::before {
+            content: "•";
+            color: var(--accent);
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .download-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/pdf-to-musicxml-logo-full.png" alt="PDF to MusicXML" class="logo">
+            <p class="tagline">Convert PDF music scores to MusicXML using optical music recognition</p>
+        </header>
+
+        <section class="download-section">
+            <h2>Download for Free</h2>
+            <div class="download-buttons">
+                <a href="https://github.com/willardjansen/cubby-score-conversion/releases/download/v1.0.0/CubbyScore.Converter-1.0.0-arm64.dmg" class="download-btn">
+                    <span class="platform">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                        macOS (Apple Silicon)
+                    </span>
+                    <span class="size">298 MB</span>
+                </a>
+                <a href="https://github.com/willardjansen/cubby-score-conversion/releases/download/v1.0.0/CubbyScore.Converter-1.0.0.dmg" class="download-btn">
+                    <span class="platform">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                        macOS (Intel)
+                    </span>
+                    <span class="size">306 MB</span>
+                </a>
+                <a href="https://github.com/willardjansen/cubby-score-conversion/releases/download/v1.0.0/CubbyScore.Converter.Setup.1.0.0.exe" class="download-btn">
+                    <span class="platform">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12m17-9v8.75l-10 .15V5.21L20 3M3 13l6 .09v6.81l-6-1.15V13m17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
+                        Windows (x64)
+                    </span>
+                    <span class="size">252 MB</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature">
+                <h3>Accurate OMR</h3>
+                <p>Powered by Audiveris, a leading open-source optical music recognition engine.</p>
+            </div>
+            <div class="feature">
+                <h3>Intelligent Validation</h3>
+                <p>See confidence scores for metadata, clefs, time signatures, tempo, and notes.</p>
+            </div>
+            <div class="feature">
+                <h3>No Setup Required</h3>
+                <p>Everything bundled - no need to install Java, Python, or other dependencies.</p>
+            </div>
+            <div class="feature">
+                <h3>Privacy First</h3>
+                <p>Runs entirely on your computer. Your scores never leave your machine.</p>
+            </div>
+        </section>
+
+        <section class="requirements">
+            <h3>System Requirements</h3>
+            <ul>
+                <li><strong>macOS:</strong> 10.15 (Catalina) or later</li>
+                <li><strong>Windows:</strong> Windows 10 or later (64-bit)</li>
+                <li><strong>RAM:</strong> 4GB minimum, 8GB recommended</li>
+                <li><strong>Storage:</strong> 500MB for installation</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>Made by <a href="https://cubby.audio">Cubby</a></p>
+            <a href="https://github.com/willardjansen/cubby-score-conversion" class="github-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                View on GitHub
+            </a>
+        </footer>
+    </div>
+</body>
+</html>
