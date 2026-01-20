@@ -2,7 +2,7 @@
 
 **Project Start Date:** 2026-01-20
 **Last Updated:** 2026-01-20
-**Current Status:** ✅ v1.0.0 Released on GitHub
+**Current Status:** ✅ v1.0.0 Released on GitHub | Website Live at cubbyscore.com
 
 ---
 
@@ -76,6 +76,18 @@ The project has **pivoted from web deployment to a desktop Electron application*
 - [x] Custom app icon (PDF→MusicXML design)
 - [x] Icon formats: .icns (macOS), .ico (Windows)
 
+### Phase 7: Website ✅
+- [x] Static HTML landing page for cubbyscore.com
+- [x] Cubby dark theme (pink/purple)
+- [x] Download buttons linking to GitHub releases
+- [x] Feature highlights section
+- [x] System requirements section
+- [x] 4-column footer (branding, resources, license, donate)
+- [x] PayPal donation integration
+- [x] Privacy policy page
+- [x] Responsive design (mobile/tablet/desktop)
+- [x] Deployed to VPS with Caddy + Let's Encrypt SSL
+
 ---
 
 ## Key Technical Challenges Solved
@@ -131,10 +143,15 @@ cubby-score-conversion/
 │   │   └── entitlements.mac.plist
 │   ├── electron-builder.yml
 │   └── package.json
-└── scripts/
-    ├── bundle-audiveris.sh    # Bundle Audiveris from installed app
-    ├── build-backend.sh       # Build Python with PyInstaller
-    └── sign-audiveris-jars.sh # Sign native libs in JARs (critical!)
+├── scripts/
+│   ├── bundle-audiveris.sh    # Bundle Audiveris from installed app
+│   ├── build-backend.sh       # Build Python with PyInstaller
+│   └── sign-audiveris-jars.sh # Sign native libs in JARs (critical!)
+└── website/                   # Static website for cubbyscore.com
+    ├── index.html             # Landing page
+    ├── privacy.html           # Privacy policy
+    ├── app-icon.png           # Favicon
+    └── pdf-to-musicxml-*.png  # Logo variants
 ```
 
 ---
@@ -191,7 +208,6 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 
 ### High Priority
 - [ ] Test Windows build on actual Windows machine
-- [ ] Set up cubbyscore.com website with download links
 
 ### Medium Priority
 - [ ] Add auto-update functionality (electron-updater)
@@ -221,6 +237,8 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 | 2026-01-20 | Custom app icon added ✅ |
 | 2026-01-20 | v1.0.0 Release Ready ✅ |
 | 2026-01-20 | **v1.0.0 Published on GitHub** ✅ |
+| 2026-01-20 | Website created (cubbyscore.com) ✅ |
+| 2026-01-20 | **Website deployed to cubbyscore.com** ✅ |
 
 ---
 
