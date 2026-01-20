@@ -23,7 +23,7 @@ The project has **pivoted from web deployment to a desktop Electron application*
 ### Downloads
 | File | Size | Platform | Status |
 |------|------|----------|--------|
-| `CubbyScore.Converter-1.0.0-arm64.dmg` | 298 MB | macOS Apple Silicon | ✅ Notarized |
+| `CubbyScore.Converter-1.0.0-arm64.dmg` | 298 MB | macOS (Apple Silicon) | ✅ Notarized |
 | `CubbyScore.Converter-1.0.0.dmg` | 306 MB | macOS Intel | ✅ Notarized |
 | `CubbyScore.Converter.Setup.1.0.0.exe` | 252 MB | Windows x64 | ✅ Built |
 

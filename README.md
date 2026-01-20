@@ -8,7 +8,7 @@ Convert PDF music scores to MusicXML format using optical music recognition (OMR
 
 | Platform | Architecture | Download |
 |----------|-------------|----------|
-| macOS | Apple Silicon (M1/M2/M3) | [CubbyScore Converter-1.0.0-arm64.dmg](https://cubbyscore.com/download/mac-arm64) |
+| macOS | Apple Silicon | [CubbyScore Converter-1.0.0-arm64.dmg](https://cubbyscore.com/download/mac-arm64) |
 | macOS | Intel | [CubbyScore Converter-1.0.0.dmg](https://cubbyscore.com/download/mac-x64) |
 | Windows | x64 | [CubbyScore Converter Setup 1.0.0.exe](https://cubbyscore.com/download/win) |
 
