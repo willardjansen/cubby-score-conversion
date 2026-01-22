@@ -1,7 +1,7 @@
 # CubbyScore Converter - Progress Tracker
 
 **Project Start Date:** 2026-01-20
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-22
 **Current Status:** ✅ v1.0.0 Released on GitHub | Landing Page Live at convert.cubbyscore.com
 
 ---
@@ -123,6 +123,11 @@ The project has **pivoted from web deployment to a desktop Electron application*
 **Problem:** Next.js static export uses absolute paths (`/_next/static/...`) that don't work with Electron's `file://` protocol.
 
 **Solution:** Added `assetPrefix: './'` to `next.config.ts` to generate relative paths.
+
+### 5. MusicXML Schema Files Missing in PyInstaller Bundle
+**Problem:** homr OMR engine failed with `No such file or directory: '.../musicxml/generate_classes/xml.xsd'` because PyInstaller wasn't bundling the musicxml package's data files.
+
+**Solution:** Added `collect_data_files('musicxml')` to `cubbyscore-backend.spec` to include the `.xsd` schema files required at runtime.
 
 ---
 
@@ -247,12 +252,13 @@ spctl --assess --verbose=4 --type execute "dist/mac-arm64/CubbyScore Converter.a
 | 2026-01-20 | **v1.0.0 Published on GitHub** ✅ |
 | 2026-01-20 | Website created (cubbyscore.com) ✅ |
 | 2026-01-20 | **Website deployed to cubbyscore.com** ✅ |
+| 2026-01-22 | Fixed musicxml schema bundling for homr OMR ✅ |
 
 ---
 
 ## Test Results
 
-Tested with Ethel Smyth orchestral score:
+### Ethel Smyth Orchestral Score
 - **Overall Confidence:** 85.6%
 - **Processing Time:** 66.36s
 - **Metadata:** Composer detected (60%)
@@ -260,3 +266,12 @@ Tested with Ethel Smyth orchestral score:
 - **Time Signatures:** 6/8 detected (95%)
 - **Tempo Markings:** "animato" detected (90%)
 - **Notes:** 872 notes detected (85%)
+
+### Hedwig's Theme (Piano)
+- **Overall Confidence:** 78.6%
+- **Processing Time:** 94.33s
+- **Metadata:** Title "Hedwig's Theme", Piano instrument (70%)
+- **Clefs:** 2 detected (98%)
+- **Time Signatures:** 3/8 detected (95%)
+- **Tempo Markings:** None detected (50%)
+- **Notes:** 59 notes detected (80%)

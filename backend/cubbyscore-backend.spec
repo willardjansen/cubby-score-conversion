@@ -83,6 +83,9 @@ datas += [(certifi.where(), 'certifi')]
 # Collect homr data files (model checkpoints)
 datas += collect_data_files('homr')
 
+# Collect musicxml data files (xml.xsd schema files needed at runtime)
+datas += collect_data_files('musicxml')
+
 # Collect easyocr data files
 datas += collect_data_files('easyocr')
 
