@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CubbyScore Converter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #12101a 0%, #1a1525 100%);
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .logo svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 32px;
+    }
+
+    .loader {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(236, 72, 153, 0.3);
+      border-top-color: #ec4899;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(0.98); }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- PDF icon stylized -->
+      <rect x="15" y="10" width="45" height="60" rx="4" fill="#374151" stroke="#ec4899" stroke-width="2"/>
+      <rect x="22" y="25" width="30" height="3" rx="1" fill="#9ca3af"/>
+      <rect x="22" y="32" width="25" height="3" rx="1" fill="#9ca3af"/>
+      <rect x="22" y="39" width="28" height="3" rx="1" fill="#9ca3af"/>
+      <rect x="22" y="46" width="20" height="3" rx="1" fill="#9ca3af"/>
+
+      <!-- Arrow -->
+      <path d="M65 45 L78 45 L78 38 L92 50 L78 62 L78 55 L65 55 Z" fill="url(#gradient)"/>
+
+      <!-- Music note -->
+      <circle cx="82" cy="75" r="8" fill="#8b5cf6"/>
+      <rect x="88" y="50" width="3" height="27" fill="#8b5cf6"/>
+      <path d="M88 50 Q 95 48 95 55 Q 95 60 88 58" fill="#8b5cf6"/>
+
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#ec4899"/>
+          <stop offset="100%" style="stop-color:#8b5cf6"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <h1>CubbyScore Converter</h1>
+  <p class="subtitle">PDF to MusicXML</p>
+
+  <div class="loader">
+    <div class="spinner"></div>
+    <span class="status" id="status">Starting...</span>
+  </div>
+
+  <script>
+    const messages = [
+      'Starting...',
+      'Loading OMR engine...',
+      'Initializing models...',
+      'Almost ready...'
+    ];
+
+    let index = 0;
+    const statusEl = document.getElementById('status');
+
+    setInterval(() => {
+      if (index < messages.length - 1) {
+        index++;
+        statusEl.textContent = messages[index];
+      }
+    }, 2500);
+  </script>
+</body>
+</html>

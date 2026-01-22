@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const http = require('http');
 
 let mainWindow;
+let splashWindow;
 let backendProcess;
 const BACKEND_PORT = 8002;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
@@ -116,6 +117,38 @@ function stopBackend() {
   }
 }
 
+function createSplashWindow() {
+  splashWindow = new BrowserWindow({
+    width: 400,
+    height: 350,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+    backgroundColor: '#00000000',
+  });
+
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'));
+  splashWindow.center();
+  splashWindow.show();
+
+  splashWindow.on('closed', () => {
+    splashWindow = null;
+  });
+}
+
+function closeSplashWindow() {
+  if (splashWindow) {
+    splashWindow.close();
+    splashWindow = null;
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -148,6 +181,7 @@ function createWindow() {
   }
 
   mainWindow.once('ready-to-show', () => {
+    closeSplashWindow();
     mainWindow.show();
   });
 
@@ -159,13 +193,19 @@ function createWindow() {
 // App lifecycle
 app.whenReady().then(async () => {
   try {
+    // Show splash screen immediately
+    createSplashWindow();
+
     // In development, backend is started separately
     if (!isDev) {
       await startBackend();
     }
+
+    // Create main window (splash closes when main window is ready)
     createWindow();
   } catch (err) {
     console.error('Failed to start app:', err);
+    closeSplashWindow();
     dialog.showErrorBox('Startup Error', `Failed to start the converter: ${err.message}`);
     app.quit();
   }

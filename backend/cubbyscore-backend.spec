@@ -44,7 +44,34 @@ hidden_imports = [
     'certifi',
     'multipart',
     'python_multipart',
+    # homr OMR engine
+    'homr',
+    'homr.main',
+    'homr.xml_generator',
+    'homr.segmentation',
+    'homr.transformer',
+    'musicxml',
+    'musicxml.xmlelement',
+    'musicxml.xmlelement.xmlelement',
+    # homr dependencies
+    'torch',
+    'torchvision',
+    'transformers',
+    'segmentation_models_pytorch',
+    'cv2',
+    'easyocr',
+    'pytorch_lightning',
+    'x_transformers',
+    'scipy',
+    'numpy',
+    'onnxruntime',
 ]
+
+# Collect all homr submodules
+hidden_imports += collect_submodules('homr')
+hidden_imports += collect_submodules('musicxml')
+hidden_imports += collect_submodules('segmentation_models_pytorch')
+hidden_imports += collect_submodules('easyocr')
 
 # Collect music21 data files
 datas = collect_data_files('music21')
@@ -52,6 +79,12 @@ datas = collect_data_files('music21')
 # Add certifi certificates
 import certifi
 datas += [(certifi.where(), 'certifi')]
+
+# Collect homr data files (model checkpoints)
+datas += collect_data_files('homr')
+
+# Collect easyocr data files
+datas += collect_data_files('easyocr')
 
 a = Analysis(
     ['main.py'],
@@ -65,9 +98,6 @@ a = Analysis(
     excludes=[
         'tkinter',
         'matplotlib',
-        'scipy',
-        'pandas',
-        'numpy.testing',
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,

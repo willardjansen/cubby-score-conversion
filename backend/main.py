@@ -1,5 +1,10 @@
 # main.py - FastAPI backend for PDF to MusicXML conversion
 
+# Disable TorchScript JIT compilation - required for PyInstaller compatibility
+# TorchScript needs .py source files which aren't included in the bundle
+import os
+os.environ["PYTORCH_JIT"] = "0"
+
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -274,22 +279,55 @@ def extract_mxl(mxl_path: Path, work_dir: Path) -> Path:
     return xml_files[0]
 
 
-def get_homr_env():
-    """Get environment variables needed for homr (SSL certificates)."""
-    env = os.environ.copy()
-    try:
-        import certifi
-        cert_path = certifi.where()
-        env['SSL_CERT_FILE'] = cert_path
-        env['REQUESTS_CA_BUNDLE'] = cert_path
-    except ImportError:
-        pass
-    return env
+def run_homr_on_image(image_path: str, output_path: str, title: str = "Score") -> Path:
+    """
+    Run homr OMR on a single image using the Python API.
+    Returns path to generated MusicXML file.
+    """
+    import xml.etree.ElementTree as ET
+    from homr.main import process_image, ProcessingConfig
+    from homr.xml_generator import XmlGeneratorArguments, generate_xml
+
+    logger.debug(f"Running homr on image: {image_path}")
+
+    # Configure homr processing
+    config = ProcessingConfig(
+        enable_debug=False,
+        enable_cache=False,
+        write_staff_positions=False,
+        read_staff_positions=False,
+        selected_staff=-1
+    )
+
+    # Configure XML output
+    xml_args = XmlGeneratorArguments(
+        large_page=False,
+        metronome=None,
+        tempo=None
+    )
+
+    # Process the image
+    staffs = process_image(image_path, config, xml_args)
+
+    if not staffs:
+        raise RuntimeError(f"homr did not detect any musical content in {image_path}")
+
+    # Generate MusicXML from the detected staffs
+    xml_element = generate_xml(xml_args, staffs, title)
+
+    # Write to file using ElementTree
+    et_element = xml_element.et_xml_element
+    tree = ET.ElementTree(et_element)
+    ET.indent(tree, space="  ")
+    tree.write(output_path, encoding="UTF-8", xml_declaration=True)
+
+    logger.debug(f"homr output written to: {output_path}")
+    return Path(output_path)
 
 
 async def process_pdf_with_homr(pdf_path: Path, work_dir: Path) -> Path:
     """
-    Process PDF using homr (Python ML-based OMR engine) via CLI.
+    Process PDF using homr (Python ML-based OMR engine).
     Returns path to generated MusicXML file.
 
     Note: homr processes one image at a time. For multi-page PDFs,
@@ -317,9 +355,8 @@ async def process_pdf_with_homr(pdf_path: Path, work_dir: Path) -> Path:
 
         logger.info(f"PDF has {len(images)} page(s)")
 
-        # Process each page with homr CLI
+        # Process each page with homr
         musicxml_files = []
-        env = get_homr_env()
 
         for i, img in enumerate(images):
             logger.debug(f"Processing page {i+1}/{len(images)} with homr...")
@@ -328,42 +365,21 @@ async def process_pdf_with_homr(pdf_path: Path, work_dir: Path) -> Path:
             img_path = output_dir / f"page_{i}.png"
             img.save(str(img_path), "PNG")
 
-            # Run homr CLI - output goes to same directory as input
-            cmd = ["homr", str(img_path)]
-
-            logger.debug(f"Running command: {' '.join(cmd)}")
+            # Output path for this page
+            page_output = output_dir / f"page_{i}.musicxml"
 
             try:
-                result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=300,  # 5 minute timeout per page
-                    env=env
+                run_homr_on_image(
+                    str(img_path),
+                    str(page_output),
+                    title=f"{pdf_path.stem} - Page {i+1}"
                 )
-
-                logger.debug(f"homr stdout: {result.stdout}")
-                if result.stderr:
-                    logger.warning(f"homr stderr: {result.stderr}")
-
-                # homr outputs to same directory with .musicxml extension
-                expected_output = output_dir / f"page_{i}.musicxml"
-                if expected_output.exists():
-                    musicxml_files.append(expected_output)
-                    logger.info(f"Page {i+1} processed successfully: {expected_output}")
+                if page_output.exists():
+                    musicxml_files.append(page_output)
+                    logger.info(f"Page {i+1} processed successfully: {page_output}")
                 else:
-                    # Check for any musicxml files created
-                    mxml_files = list(output_dir.glob("*.musicxml"))
-                    new_files = [f for f in mxml_files if f not in musicxml_files]
-                    if new_files:
-                        musicxml_files.append(new_files[0])
-                        logger.info(f"Page {i+1} processed: {new_files[0]}")
-                    else:
-                        logger.warning(f"homr did not produce output for page {i+1}")
+                    logger.warning(f"homr did not produce output for page {i+1}")
 
-            except subprocess.TimeoutExpired:
-                logger.warning(f"homr timed out on page {i+1}")
-                continue
             except Exception as e:
                 logger.warning(f"homr failed on page {i+1}: {e}")
                 continue
@@ -403,62 +419,31 @@ async def process_pdf_with_homr(pdf_path: Path, work_dir: Path) -> Path:
 
 async def process_image_with_homr(img_path: Path, work_dir: Path) -> Path:
     """
-    Process a single image directly with homr CLI.
+    Process a single image directly with homr Python API.
     Returns path to generated MusicXML file.
     """
     logger.info(f"Processing image with homr: {img_path}")
 
-    # Create output directory and copy image there
+    # Create output directory
     output_dir = work_dir / "homr_output"
     output_dir.mkdir(exist_ok=True)
 
-    # Copy image to output dir so homr outputs there
-    work_img_path = output_dir / img_path.name
-    shutil.copy(img_path, work_img_path)
-
-    # Run homr CLI - output goes to same directory as input
-    cmd = ["homr", str(work_img_path)]
-
-    logger.debug(f"Running command: {' '.join(cmd)}")
-    env = get_homr_env()
+    # Output path
+    final_path = output_dir / f"{img_path.stem}.musicxml"
 
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5 minute timeout
-            env=env
+        run_homr_on_image(
+            str(img_path),
+            str(final_path),
+            title=img_path.stem
         )
 
-        logger.debug(f"homr stdout: {result.stdout}")
-        if result.stderr:
-            logger.warning(f"homr stderr: {result.stderr}")
-
-        # Find the generated MusicXML file (homr outputs with .musicxml extension)
-        expected_output = work_img_path.with_suffix('.musicxml')
-        if expected_output.exists():
-            final_path = output_dir / f"{img_path.stem}.musicxml"
-            if expected_output != final_path:
-                shutil.copy(expected_output, final_path)
+        if final_path.exists():
             logger.info(f"homr MusicXML generated: {final_path}")
             return final_path
 
-        # Check for any musicxml files
-        mxml_files = list(output_dir.glob("*.musicxml"))
-        if mxml_files:
-            final_path = output_dir / f"{img_path.stem}.musicxml"
-            shutil.copy(mxml_files[0], final_path)
-            logger.info(f"homr MusicXML generated: {final_path}")
-            return final_path
+        raise RuntimeError("homr did not produce MusicXML output")
 
-        # No output found
-        all_files = list(output_dir.rglob("*"))
-        logger.error(f"No MusicXML found. Files in output: {all_files}")
-        raise RuntimeError(f"homr did not produce MusicXML output. Generated files: {[f.name for f in all_files]}")
-
-    except subprocess.TimeoutExpired:
-        raise RuntimeError("homr processing timed out (5 minutes)")
     except Exception as e:
         logger.error(f"homr processing failed: {e}")
         raise RuntimeError(f"homr processing failed: {str(e)}")
