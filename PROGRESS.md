@@ -2,7 +2,7 @@
 
 **Project Start Date:** 2026-01-20
 **Last Updated:** 2026-01-22
-**Current Status:** ✅ v1.0.0 Released on GitHub | Landing Page Live at convert.cubbyscore.com
+**Current Status:** ✅ v1.1.0 Released on GitHub | Landing Page Live at convert.cubbyscore.com
 
 ---
 
@@ -16,7 +16,22 @@ The project has **pivoted from web deployment to a desktop Electron application*
 
 ---
 
-## GitHub Release
+## GitHub Releases
+
+### v1.1.0 (2026-01-29)
+
+**Changes:**
+- Added Apple notarization support via keychain profile
+- Added `build/notarize.js` for automatic notarization
+- Updated `electron-builder.yml` with afterSign hook
+- Installed `@electron/notarize` package
+
+| File | Platform | Status |
+|------|----------|--------|
+| `CubbyScore Converter-1.1.0.dmg` | macOS Intel | ✅ Notarized |
+| `CubbyScore Converter-1.1.0-arm64.dmg` | macOS Apple Silicon | ✅ Notarized |
+
+### v1.0.0
 
 **v1.0.0**: https://github.com/willardjansen/cubby-score-conversion/releases/tag/v1.0.0
 

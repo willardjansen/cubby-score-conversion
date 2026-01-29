@@ -40,12 +40,14 @@ mac:
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  notarize: true
+  notarize: false
   # Skip signing JAR files and their extracted contents - dylibs inside are pre-signed
   signIgnore:
     - ".*\\.jar$"
     - ".*\\.class$"
     - ".*audiveris/app/.*"
+
+afterSign: build/notarize.js
 
 dmg:
   title: "${productName}"
