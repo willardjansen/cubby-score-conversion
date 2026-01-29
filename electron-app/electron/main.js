@@ -1,14 +1,53 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
 const { spawn } = require('child_process');
 const http = require('http');
+const net = require('net');
 
 let mainWindow;
 let splashWindow;
 let backendProcess;
-const BACKEND_PORT = 8002;
+
+// Default ports - will be updated if busy
+const DEFAULT_BACKEND_PORT = 8002;
+const DEFAULT_FRONTEND_PORT = 3005;
+
+// Ports to avoid on macOS (used by system services like AirPlay)
+const MACOS_RESERVED_PORTS = [3000, 5000, 7000];
+
+// Actual ports in use (set after finding available ports)
+let BACKEND_PORT = DEFAULT_BACKEND_PORT;
+let FRONTEND_PORT = DEFAULT_FRONTEND_PORT;
+
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+
+// Check if a port is available
+function isPortAvailable(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once('error', () => resolve(false));
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+    server.listen(port, '0.0.0.0');
+  });
+}
+
+// Find an available port
+async function findAvailablePort(startPort, maxAttempts = 10) {
+  let port = startPort;
+  for (let i = 0; i < maxAttempts; i++) {
+    while (MACOS_RESERVED_PORTS.includes(port)) {
+      port++;
+    }
+    if (await isPortAvailable(port)) {
+      return port;
+    }
+    port++;
+  }
+  throw new Error(`Could not find available port after ${maxAttempts} attempts starting from ${startPort}`);
+}
 
 // Get the path to resources based on whether we're in dev or production
 function getResourcePath(resourceName) {
@@ -158,6 +197,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 15, y: 15 },
@@ -168,7 +208,7 @@ function createWindow() {
   // Load the app
   if (isDev) {
     // In development, load from Next.js dev server
-    mainWindow.loadURL('http://localhost:3005');
+    mainWindow.loadURL(`http://localhost:${FRONTEND_PORT}`);
     mainWindow.webContents.openDevTools();
   } else {
     // In production, load the exported Next.js app
@@ -190,11 +230,30 @@ function createWindow() {
   });
 }
 
+// IPC handler for frontend to get port config
+ipcMain.handle('get-config', () => {
+  return {
+    backendPort: BACKEND_PORT,
+    frontendPort: FRONTEND_PORT
+  };
+});
+
 // App lifecycle
 app.whenReady().then(async () => {
   try {
     // Show splash screen immediately
     createSplashWindow();
+
+    // Find available ports before starting servers
+    try {
+      BACKEND_PORT = await findAvailablePort(DEFAULT_BACKEND_PORT);
+      if (BACKEND_PORT !== DEFAULT_BACKEND_PORT) {
+        console.log(`ℹ️  Backend port ${DEFAULT_BACKEND_PORT} was busy, using ${BACKEND_PORT}`);
+      }
+    } catch (err) {
+      console.error('Failed to find available port for backend:', err.message);
+      throw new Error('Could not find available port for backend server');
+    }
 
     // In development, backend is started separately
     if (!isDev) {
@@ -203,6 +262,8 @@ app.whenReady().then(async () => {
 
     // Create main window (splash closes when main window is ready)
     createWindow();
+
+    console.log(`Backend running on port ${BACKEND_PORT}`);
   } catch (err) {
     console.error('Failed to start app:', err);
     closeSplashWindow();

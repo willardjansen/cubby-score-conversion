@@ -3,6 +3,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Download, Loader2, Music } from 'lucide-react';
 
+// Electron API type declaration
+declare global {
+  interface Window {
+    electronAPI?: {
+      getConfig: () => Promise<{ backendPort: number; frontendPort: number }>;
+    };
+  }
+}
+
 interface ValidationReport {
   metadata: {
     title?: string;
@@ -44,10 +53,48 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState<string>('audiveris');
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [apiUrl, setApiUrl] = useState<string>('http://localhost:8002');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Backend runs locally on port 8002
-  const API_URL = 'http://localhost:8002';
+  // Get backend port from Electron or use default
+  useEffect(() => {
+    async function getBackendPort() {
+      // Try to get port from Electron IPC
+      if (window.electronAPI) {
+        try {
+          const config = await window.electronAPI.getConfig();
+          setApiUrl(`http://localhost:${config.backendPort}`);
+          console.log(`Using backend port from Electron: ${config.backendPort}`);
+          return;
+        } catch (e) {
+          console.log('Failed to get config from Electron, using default');
+        }
+      }
+
+      // Fallback: probe for backend on common ports
+      const portsToTry = [8002, 8003, 8004, 8005, 8000];
+      for (const port of portsToTry) {
+        try {
+          const response = await fetch(`http://localhost:${port}/health`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(500)
+          });
+          if (response.ok) {
+            setApiUrl(`http://localhost:${port}`);
+            console.log(`Found backend on port ${port}`);
+            return;
+          }
+        } catch {
+          // Continue to next port
+        }
+      }
+      console.log('Using default backend port 8002');
+    }
+    getBackendPort();
+  }, []);
+
+  // Alias for backward compatibility
+  const API_URL = apiUrl;
 
   // Timer effect for elapsed time during conversion
   useEffect(() => {
