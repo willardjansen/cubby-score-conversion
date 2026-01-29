@@ -414,3 +414,217 @@ win:
   sign: null
   certificateSubjectName: null
 ```
+
+## GitHub Actions for Cross-Platform Builds
+
+Building Windows apps on macOS requires Wine, which can be tricky to install. GitHub Actions provides a better solution with native Windows runners.
+
+### Workflow File
+
+Create `.github/workflows/build.yml`:
+
+```yaml
+name: Build Electron App
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build for'
+        required: true
+        default: 'windows'
+        type: choice
+        options:
+          - windows
+          - mac
+          - all
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    if: github.event_name == 'push' || github.event.inputs.platform == 'windows' || github.event.inputs.platform == 'all'
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Build Electron (Windows)
+        run: npx electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            dist/*.exe
+            dist/*.msi
+
+  build-mac:
+    if: github.event_name == 'push' || github.event.inputs.platform == 'mac' || github.event.inputs.platform == 'all'
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Apple certificate
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          # Decode certificate
+          echo "$CSC_LINK" | base64 --decode > $RUNNER_TEMP/certificate.p12
+
+          # Create and configure keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate
+          security import $RUNNER_TEMP/certificate.p12 -P "$CSC_KEY_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Build Electron (Mac)
+        run: npx electron-builder --mac --x64 --arm64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload Mac artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-build
+          path: |
+            dist/*.dmg
+            dist/*.zip
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+```
+
+### Mac Code Signing Secrets Setup
+
+To enable Mac code signing in GitHub Actions:
+
+1. **Export certificate from Keychain Access:**
+   - Open Keychain Access → login keychain → My Certificates
+   - Find "Developer ID Application: Your Name"
+   - Expand to verify private key is attached
+   - Right-click → Export → Save as `.p12` (password optional)
+
+2. **Upload secrets to GitHub:**
+   ```bash
+   # Certificate (base64 encoded)
+   base64 -i ~/Downloads/Certificate.p12 | gh secret set CSC_LINK
+
+   # Certificate password (empty string if no password)
+   echo "" | gh secret set CSC_KEY_PASSWORD
+
+   # Apple notarization credentials
+   echo "your@email.com" | gh secret set APPLE_ID
+   echo "xxxx-xxxx-xxxx-xxxx" | gh secret set APPLE_APP_SPECIFIC_PASSWORD
+   echo "YOURTEAMID" | gh secret set APPLE_TEAM_ID
+   ```
+
+3. **Update notarize.js to support both local and CI:**
+   ```javascript
+   // Use environment variables (GitHub Actions) or keychain profile (local)
+   if (process.env.APPLE_ID && process.env.APPLE_APP_SPECIFIC_PASSWORD) {
+     await notarize({
+       appPath,
+       appleId: process.env.APPLE_ID,
+       appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
+       teamId: process.env.APPLE_TEAM_ID,
+     });
+   } else {
+     await notarize({
+       appPath,
+       keychainProfile: 'your-keychain-profile',
+     });
+   }
+   ```
+
+### Triggering Builds
+
+```bash
+# Manually trigger Windows build
+gh workflow run build.yml --field platform=windows
+
+# Manually trigger all platforms
+gh workflow run build.yml --field platform=all
+
+# Watch build progress
+gh run watch
+
+# Download artifacts after build completes
+gh run download <run-id> --name windows-build --dir ./dist/github-artifacts
+```
+
+### Automatic Releases
+
+To automatically create releases when pushing version tags:
+
+```yaml
+  release:
+    needs: [build-windows, build-mac]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Then push a tag to trigger a release:
+```bash
+git tag v1.2.1
+git push origin v1.2.1
+```
