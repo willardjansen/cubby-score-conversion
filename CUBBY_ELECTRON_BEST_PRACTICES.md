@@ -220,6 +220,165 @@ Current Cubby apps and their keychain profiles:
 | Cubby Score Conversion | `cubby-score-conversion` |
 | Cubby Review and Approve | `cubby-review-and-approve` |
 
+## Splash Screen
+
+For apps that take time to start (starting servers, loading resources), add a splash screen to improve UX and show connection info.
+
+### Required Files
+
+**electron/splash.html:**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>App Name</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .status { color: #888; margin-bottom: 32px; }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid rgba(233, 69, 96, 0.2);
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .connection-info {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px 32px;
+      text-align: center;
+      display: none;
+    }
+    .connection-url { font-size: 20px; color: #4ade80; font-family: monospace; }
+    .continue-btn {
+      margin-top: 24px;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      display: none;
+    }
+    .continue-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(233, 69, 96, 0.4); }
+  </style>
+</head>
+<body>
+  <h1>App Name</h1>
+  <p class="status" id="status">Starting...</p>
+  <div class="spinner" id="spinner"></div>
+  <div class="connection-info" id="connection-info">
+    <div>Connect your device to</div>
+    <div class="connection-url" id="connection-url">-</div>
+  </div>
+  <button class="continue-btn" id="continue-btn">Open in Browser</button>
+  <script>
+    window.electronAPI?.onConnectionInfo((info) => {
+      document.getElementById('status').textContent = 'Ready!';
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('connection-info').style.display = 'block';
+      document.getElementById('connection-url').textContent = info.url;
+      document.getElementById('continue-btn').style.display = 'block';
+    });
+    window.electronAPI?.onStatus((status) => {
+      document.getElementById('status').textContent = status;
+    });
+    document.getElementById('continue-btn').addEventListener('click', () => {
+      window.electronAPI?.continue();
+    });
+  </script>
+</body>
+</html>
+```
+
+**electron/splash-preload.js:**
+```javascript
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  onConnectionInfo: (callback) => ipcRenderer.on('connection-info', (_, info) => callback(info)),
+  onStatus: (callback) => ipcRenderer.on('status', (_, status) => callback(status)),
+  continue: () => ipcRenderer.send('splash-continue'),
+});
+```
+
+### Main Process Integration
+
+```javascript
+const { BrowserWindow } = require('electron');
+
+let splashWindow = null;
+
+function createSplashWindow() {
+  splashWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    frame: false,
+    resizable: false,
+    center: true,
+    show: false,
+    backgroundColor: '#1a1a2e',
+    webPreferences: {
+      preload: path.join(__dirname, 'splash-preload.js'),
+      contextIsolation: true,
+    }
+  });
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'));
+  splashWindow.once('ready-to-show', () => splashWindow.show());
+}
+
+function updateSplashStatus(status) {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.webContents.send('status', status);
+  }
+}
+
+function sendConnectionInfo(url) {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.webContents.send('connection-info', { url });
+  }
+}
+
+// In app.whenReady():
+app.whenReady().then(async () => {
+  createSplashWindow();
+  updateSplashStatus('Starting servers...');
+
+  // ... start servers ...
+
+  const connectionUrl = `http://${getLocalIP()}:${PORT}`;
+  updateSplashStatus('Ready!');
+  sendConnectionInfo(connectionUrl);
+
+  // Wait for user to click "Continue" button (don't auto-dismiss)
+  ipcMain.once('splash-continue', () => {
+    shell.openExternal(`http://localhost:${PORT}`);
+    setTimeout(() => {
+      if (splashWindow) splashWindow.close();
+      if (process.platform === 'darwin') app.dock.hide();
+    }, 500);
+  });
+});
+```
+
 ## Common Issues
 
 ### MIDI Not Working in Packaged App
