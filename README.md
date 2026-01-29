@@ -93,6 +93,16 @@ MIT License - See [LICENSE](LICENSE) for details.
 
 **Willard Jansen** - [Cubby](https://cubby.audio)
 
+## Troubleshooting
+
+### Browser shows ERR_SSL_PROTOCOL_ERROR
+
+If you see SSL errors:
+
+1. Make sure you're using `http://` (not `https://`) in the URL
+2. Try using an **incognito/private browsing** window
+3. Clear the browser cache if you previously tried with HTTPS
+
 ## Acknowledgments
 
 - [Audiveris](https://github.com/Audiveris/audiveris) - Open source OMR engine
